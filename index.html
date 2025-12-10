@@ -296,38 +296,6 @@
             color: var(--text-muted);
         }
 
-        /* === 6. STUDIO SECTION === */
-        .image-preview-container {
-            margin-top: 25px;
-            min-height: 200px;
-            background: #000;
-            border: 2px dashed #333;
-            border-radius: var(--border-radius);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            position: relative;
-        }
-
-        .image-preview-container img {
-            width: 100%;
-            height: auto;
-            display: block;
-            opacity: 0;
-            transition: opacity 0.5s ease;
-        }
-
-        .image-preview-container.loaded img {
-            opacity: 1;
-        }
-        
-        .image-placeholder-text {
-            color: #444;
-            position: absolute;
-            pointer-events: none;
-        }
-
         /* === 7. MONETAG FOOTER === */
         .monetag-footer {
             margin-top: 40px;
@@ -370,7 +338,7 @@
         <div class="app-title">NanoProPrompt</div>
         <div class="tabs">
             <button class="tab-btn active" onclick="switchTab('vinci')">Prompt Director</button>
-            <button class="tab-btn" onclick="switchTab('studio')">Text-to-Image Studio</button>
+            <button class="tab-btn" onclick="openOpal()">Open in Opal</button>
         </div>
     </header>
 
@@ -427,60 +395,11 @@
                 </div>
 
                 <button class="btn btn-secondary" onclick="resetVinci()">Try Again</button>
-                <button class="btn btn-secondary" style="border-color: var(--neon-purple);" onclick="switchTab('studio')">→ Switch to Studio</button>
+                <button class="btn btn-secondary" style="border-color: var(--neon-purple);" onclick="openOpal()">→ Open in Opal</button>
             </div>
         </div>
 
-        <!-- === TAB 2: TEXT-TO-IMAGE STUDIO === -->
-        <div id="tab-studio" class="tab-content">
-            <div class="form-group">
-                <label for="studio-prompt">Enter Text to Generate Image</label>
-                <textarea id="studio-prompt" placeholder="Describe what you want to see..."></textarea>
-            </div>
-
-            <div style="display: flex; gap: 10px;">
-                <div class="form-group" style="flex: 1;">
-                    <label>Style</label>
-                    <select id="studio-style">
-                        <option value="vibrant">Vibrant</option>
-                        <option value="dark">Dark/Noir</option>
-                        <option value="pastel">Pastel</option>
-                        <option value="bw">Black & White</option>
-                    </select>
-                </div>
-                <div class="form-group" style="flex: 1;">
-                    <label>Aspect Ratio</label>
-                    <select id="studio-ratio">
-                        <option value="1:1">1:1 (Square)</option>
-                        <option value="16:9">16:9 (Landscape)</option>
-                        <option value="9:16">9:16 (Portrait)</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>Resolution & Detail</label>
-                <select id="studio-res">
-                    <option value="1024">Standard (1024x1024)</option>
-                    <option value="2048">High Res (2048x2048)</option>
-                </select>
-            </div>
-
-            <button class="btn btn-primary" onclick="generateImage()">Generate Image 🎨</button>
-
-            <!-- Image Preview -->
-            <div id="img-preview-box" class="image-preview-container">
-                <span class="image-placeholder-text">Preview Area</span>
-                <img id="generated-image" src="" alt="Generated Preview">
-            </div>
-
-            <div style="margin-top: 15px;">
-                <a id="download-btn" class="btn btn-primary btn-disabled" href="#" download="nanoproprompt_art.jpg">Download Image 📥</a>
-                <button class="btn btn-secondary" onclick="document.getElementById('studio-prompt').focus()">Refine This Image</button>
-            </div>
-        </div>
-
-        <!-- === 5. MONETAG FOOTER === -->
+        <!-- === MONETAG FOOTER === -->
         <footer class="monetag-footer">
             <div class="monetag-text">🎁 Extra AI tools, assets & deals for creators</div>
             <a href="https://otieu.com/4/10294665" target="_blank" class="monetag-btn">Unlock Free Resources</a>
@@ -492,27 +411,37 @@
         if (window.Telegram && window.Telegram.WebApp) {
             window.Telegram.WebApp.ready();
             window.Telegram.WebApp.expand(); // Expand to full height
-            // Set header color to match app
             window.Telegram.WebApp.setHeaderColor('#050505'); 
         }
 
-        // === TAB LOGIC ===
+        // === TAB LOGIC (only Vinci tab visible, Opal is external) ===
         function switchTab(tabId) {
-            // Update Headers
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            // Update Content
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
 
             if (tabId === 'vinci') {
                 document.querySelector('.tab-btn:nth-child(1)').classList.add('active');
                 document.getElementById('tab-vinci').classList.add('active');
-            } else {
-                document.querySelector('.tab-btn:nth-child(2)').classList.add('active');
-                document.getElementById('tab-studio').classList.add('active');
             }
         }
 
-        // === VINCI LOGIC (MOCK) ===
+        // === OPEN OPAL (use idea as prompt) ===
+        function openOpal() {
+            const idea = document.getElementById('vinci-idea').value.trim();
+            const encoded = encodeURIComponent(idea);
+
+            // BDEL had URL b li dyal Opal:
+            // - ila web: https://app.opal.com/... 
+            // - ila deep link: opal://...
+            const url = `https://opal.example.com/?prompt=${encoded}`;
+
+            // Ila katkhddem f browser:
+            window.open(url, '_blank');
+            // Ila katkhddem dakhel in-app browser momkin t3awedha b:
+            // window.location.href = url;
+        }
+
+        // === VINCI LOGIC ===
         function challengeVinci() {
             const input = document.getElementById('vinci-idea').value.trim();
             const style = document.getElementById('vinci-style').value;
@@ -524,7 +453,7 @@
             }
 
             // 1. Mock Score
-            const score = Math.floor(Math.random() * (100 - 65 + 1)) + 65; // Random between 65 and 100
+            const score = Math.floor(Math.random() * (100 - 65 + 1)) + 65;
             
             // 2. Feedback based on score
             let feedback = "";
@@ -532,15 +461,19 @@
             else if (score > 80) feedback = "Great start. Adding a bit more lighting detail could push it further.";
             else feedback = "Good foundation. I've added some technical keywords to enhance clarity.";
 
-            // 3. Generate Mock Prompts
-            const p1 = `${input}, ${style} style, highly detailed, 8k resolution, cinematic lighting, masterpiece.`;
-            const p2 = `(Best quality), (Masterpiece), ${input}, in the style of ${style}, volumetric fog, ray tracing, sharp focus.`;
-            const p3 = `Award winning photography of ${input}, ${style} aesthetic, depth of field, HDR, intricate details, trending on ArtStation.`;
+            // 3. Generate Prompts (hyper-detailed)
+            const base = `${input}, ultra detailed, hyper realistic, cinematic composition, complex textures, rich color grading, intricate details, global illumination, sharp focus, 8k resolution`;
+            const lighting = `dramatic lighting, volumetric fog, soft global shadows, realistic reflections`;
+            const camera = `photographed with a full-frame DSLR, 85mm lens, f/1.4, shallow depth of field, HDR`;
+            const art = `in the style of ${style}, trending on ArtStation, award-winning, professional grade`;
+
+            const p1 = `${base}, ${lighting}, ${art}.`;
+            const p2 = `Masterpiece, best quality, ${base}, ${camera}, ${art}.`;
+            const p3 = `Ultra photorealistic ${input}, ${style} aesthetic, ${lighting}, ${camera}, high dynamic range, insanely detailed, professional studio quality.`;
 
             // 4. Update UI
             resultsDiv.style.display = "block";
             
-            // Animate Progress Bar
             document.getElementById('score-value').innerText = score + "/100";
             const bar = document.getElementById('score-bar');
             bar.style.width = "0%";
@@ -551,7 +484,6 @@
             document.getElementById('prompt-2').innerText = p2;
             document.getElementById('prompt-3').innerText = p3;
 
-            // Scroll to results
             resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
@@ -565,60 +497,13 @@
         function copyText(elementId) {
             const text = document.getElementById(elementId).innerText;
             navigator.clipboard.writeText(text).then(() => {
-                // Visual feedback
                 const el = document.getElementById(elementId).parentElement;
                 const originalBorder = el.style.borderColor;
-                el.style.borderColor = "#00ff9d"; // Green flash
+                el.style.borderColor = "#00ff9d";
                 setTimeout(() => {
-                    el.style.borderColor = ""; 
+                    el.style.borderColor = originalBorder || "";
                 }, 300);
             });
-        }
-
-        // === STUDIO LOGIC (MOCK) ===
-        function generateImage() {
-            const prompt = document.getElementById('studio-prompt').value.trim();
-            if (!prompt) {
-                alert("Please describe the image you want to generate.");
-                return;
-            }
-
-            const btn = document.querySelector('#tab-studio .btn-primary');
-            const previewContainer = document.getElementById('img-preview-box');
-            const imgEl = document.getElementById('generated-image');
-            const downloadBtn = document.getElementById('download-btn');
-            
-            // Loading State
-            btn.innerText = "Generating...";
-            btn.classList.add('btn-disabled');
-            previewContainer.classList.remove('loaded');
-
-            // Mock Dimensions based on selection
-            const ratio = document.getElementById('studio-ratio').value;
-            let width = 600;
-            let height = 600;
-
-            if (ratio === "16:9") { width = 800; height = 450; }
-            if (ratio === "9:16") { width = 450; height = 800; }
-
-            // Random seed for variety
-            const randomSeed = Math.floor(Math.random() * 1000);
-            const imageUrl = `https://picsum.photos/seed/${randomSeed}/${width}/${height}`;
-
-            // Simulate Network Delay
-            setTimeout(() => {
-                imgEl.src = imageUrl;
-                
-                imgEl.onload = () => {
-                    previewContainer.classList.add('loaded');
-                    btn.innerText = "Generate Image 🎨";
-                    btn.classList.remove('btn-disabled');
-                    
-                    // Enable Download
-                    downloadBtn.href = imageUrl;
-                    downloadBtn.classList.remove('btn-disabled');
-                };
-            }, 1500);
         }
     </script>
 </body>

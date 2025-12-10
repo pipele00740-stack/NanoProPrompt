@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NanoProPrompt</title>
+    <!-- Telegram Web App Script (Optional for better integration) -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        /* === 1. GENERAL STYLES & RESET === */
+        :root {
+            --bg-color: #050505;
+            --card-bg: #111111;
+            --text-main: #e0e0e0;
+            --text-muted: #888888;
+            --neon-blue: #00f3ff;
+            --neon-purple: #bd00ff;
+            --neon-green: #00ff9d;
+            --border-radius: 12px;
+            --font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: var(--font-family);
+            font-size: 16px;
+            line-height: 1.5;
+            padding-bottom: 20px; /* Space for footer */
+        }
+
+        /* Utility: Hide scrollbar but keep functionality */
+        body::-webkit-scrollbar {
+            width: 6px;
+        }
+        body::-webkit-scrollbar-thumb {
+            background: var(--card-bg); 
+            border-radius: 3px;
+        }
+
+        /* === 2. HEADER & TABS === */
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(5, 5, 5, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid #333;
+            padding: 10px 16px 0 16px;
+        }
+
+        .app-title {
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+            background: linear-gradient(90deg, var(--neon-blue), var(--neon-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-transform: uppercase;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            padding: 12px 0;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            position: relative;
+            transition: color 0.3s;
+        }
+
+        .tab-btn.active {
+            color: var(--neon-blue);
+        }
+
+        /* Active indicator line */
+        .tab-btn::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: transparent;
+            transition: background 0.3s;
+        }
+
+        .tab-btn.active::after {
+            background: var(--neon-blue);
+            box-shadow: 0 0 10px var(--neon-blue);
+        }
+
+        /* === 3. MAIN CONTAINER === */
+        main {
+            padding: 20px 16px;
+            max-width: 600px;
+            margin: 0 auto;
+            min-height: 80vh;
+        }
+
+        .tab-content {
+            display: none; /* Hidden by default */
+            animation: fadeIn 0.4s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* === 4. FORM ELEMENTS === */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+            color: var(--neon-blue);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        textarea, select, input {
+            width: 100%;
+            background: var(--card-bg);
+            border: 1px solid #333;
+            color: #fff;
+            padding: 12px;
+            border-radius: var(--border-radius);
+            font-family: inherit;
+            font-size: 1rem;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        textarea:focus, select:focus, input:focus {
+            outline: none;
+            border-color: var(--neon-purple);
+            box-shadow: 0 0 8px rgba(189, 0, 255, 0.3);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        /* Custom Dropdown Arrow */
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2300f3ff%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px top 50%;
+            background-size: 12px auto;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-block;
+            width: 100%;
+            padding: 14px;
+            border-radius: var(--border-radius);
+            border: none;
+            font-size: 1rem;
+            font-weight: 700;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(0, 243, 255, 0.2);
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+
+        .btn-secondary {
+            background: #222;
+            color: #fff;
+            border: 1px solid #444;
+            margin-top: 10px;
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--neon-blue);
+        }
+
+        .btn-disabled {
+            background: #333;
+            color: #666;
+            cursor: not-allowed;
+            pointer-events: none;
+            box-shadow: none;
+        }
+
+        /* === 5. VINCI RESULTS SECTION === */
+        #vinci-results {
+            margin-top: 30px;
+            padding: 20px;
+            background: var(--card-bg);
+            border: 1px solid #333;
+            border-radius: var(--border-radius);
+            display: none; /* Hidden until generation */
+        }
+
+        .score-container {
+            margin-bottom: 20px;
+        }
+
+        .score-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            color: var(--neon-green);
+        }
+
+        .progress-bar-bg {
+            width: 100%;
+            height: 8px;
+            background: #222;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: var(--neon-green);
+            width: 0%;
+            transition: width 1s ease-out;
+            box-shadow: 0 0 10px var(--neon-green);
+        }
+
+        .feedback-text {
+            font-size: 0.9rem;
+            color: #ccc;
+            margin-bottom: 20px;
+            font-style: italic;
+            border-left: 3px solid var(--neon-purple);
+            padding-left: 10px;
+        }
+
+        .prompt-box {
+            background: #000;
+            border: 1px solid #333;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            position: relative;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .prompt-box:hover {
+            border-color: var(--neon-blue);
+        }
+
+        .prompt-text {
+            font-size: 0.9rem;
+            color: #fff;
+            padding-right: 30px; /* Space for icon */
+        }
+
+        .copy-icon {
+            position: absolute;
+            right: 10px;
+            top: 12px;
+            font-size: 1.1rem;
+            color: var(--text-muted);
+        }
+
+        /* === 6. STUDIO SECTION === */
+        .image-preview-container {
+            margin-top: 25px;
+            min-height: 200px;
+            background: #000;
+            border: 2px dashed #333;
+            border-radius: var(--border-radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .image-preview-container img {
+            width: 100%;
+            height: auto;
+            display: block;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .image-preview-container.loaded img {
+            opacity: 1;
+        }
+        
+        .image-placeholder-text {
+            color: #444;
+            position: absolute;
+            pointer-events: none;
+        }
+
+        /* === 7. MONETAG FOOTER === */
+        .monetag-footer {
+            margin-top: 40px;
+            padding: 20px 0;
+            border-top: 1px solid #222;
+            text-align: center;
+        }
+
+        .monetag-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-bottom: 10px;
+        }
+
+        .monetag-btn {
+            display: inline-block;
+            background: #1a1a1a;
+            color: var(--neon-blue);
+            padding: 8px 16px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-size: 0.85rem;
+            border: 1px solid #333;
+            transition: all 0.2s;
+        }
+
+        .monetag-btn:hover {
+            border-color: var(--neon-blue);
+            background: #222;
+        }
+
+        /* Utility classes */
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <div class="app-title">NanoProPrompt</div>
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('vinci')">Prompt Director</button>
+            <button class="tab-btn" onclick="switchTab('studio')">Text-to-Image Studio</button>
+        </div>
+    </header>
+
+    <main>
+        <!-- === TAB 1: PROMPT DIRECTOR (VINCI) === -->
+        <div id="tab-vinci" class="tab-content active">
+            <div class="form-group">
+                <label for="vinci-idea">Your Core Idea</label>
+                <textarea id="vinci-idea" placeholder="e.g., A futuristic samurai cat in a neon city..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="vinci-style">Target Style</label>
+                <select id="vinci-style">
+                    <option value="Cinematic">Cinematic Lighting</option>
+                    <option value="Cyberpunk">Cyberpunk / Neon</option>
+                    <option value="Photorealistic">Hyper-Realistic</option>
+                    <option value="Anime">Anime / Manga</option>
+                    <option value="Oil Painting">Oil Painting</option>
+                    <option value="3D Render">3D Render (Octane)</option>
+                </select>
+            </div>
+
+            <button class="btn btn-primary" onclick="challengeVinci()">Challenge Vinci ⚡</button>
+
+            <!-- Results Area -->
+            <div id="vinci-results">
+                <div class="score-container">
+                    <div class="score-header">
+                        <span>Prompt Strength</span>
+                        <span id="score-value">0/100</span>
+                    </div>
+                    <div class="progress-bar-bg">
+                        <div id="score-bar" class="progress-bar-fill"></div>
+                    </div>
+                </div>
+
+                <div id="vinci-feedback" class="feedback-text">
+                    Waiting for analysis...
+                </div>
+
+                <label>Optimized Prompts (Tap to Copy)</label>
+                <div class="prompt-box" onclick="copyText('prompt-1')">
+                    <div id="prompt-1" class="prompt-text"></div>
+                    <span class="copy-icon">📋</span>
+                </div>
+                <div class="prompt-box" onclick="copyText('prompt-2')">
+                    <div id="prompt-2" class="prompt-text"></div>
+                    <span class="copy-icon">📋</span>
+                </div>
+                <div class="prompt-box" onclick="copyText('prompt-3')">
+                    <div id="prompt-3" class="prompt-text"></div>
+                    <span class="copy-icon">📋</span>
+                </div>
+
+                <button class="btn btn-secondary" onclick="resetVinci()">Try Again</button>
+                <button class="btn btn-secondary" style="border-color: var(--neon-purple);" onclick="switchTab('studio')">→ Switch to Studio</button>
+            </div>
+        </div>
+
+        <!-- === TAB 2: TEXT-TO-IMAGE STUDIO === -->
+        <div id="tab-studio" class="tab-content">
+            <div class="form-group">
+                <label for="studio-prompt">Enter Text to Generate Image</label>
+                <textarea id="studio-prompt" placeholder="Describe what you want to see..."></textarea>
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <div class="form-group" style="flex: 1;">
+                    <label>Style</label>
+                    <select id="studio-style">
+                        <option value="vibrant">Vibrant</option>
+                        <option value="dark">Dark/Noir</option>
+                        <option value="pastel">Pastel</option>
+                        <option value="bw">Black & White</option>
+                    </select>
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label>Aspect Ratio</label>
+                    <select id="studio-ratio">
+                        <option value="1:1">1:1 (Square)</option>
+                        <option value="16:9">16:9 (Landscape)</option>
+                        <option value="9:16">9:16 (Portrait)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Resolution & Detail</label>
+                <select id="studio-res">
+                    <option value="1024">Standard (1024x1024)</option>
+                    <option value="2048">High Res (2048x2048)</option>
+                </select>
+            </div>
+
+            <button class="btn btn-primary" onclick="generateImage()">Generate Image 🎨</button>
+
+            <!-- Image Preview -->
+            <div id="img-preview-box" class="image-preview-container">
+                <span class="image-placeholder-text">Preview Area</span>
+                <img id="generated-image" src="" alt="Generated Preview">
+            </div>
+
+            <div style="margin-top: 15px;">
+                <a id="download-btn" class="btn btn-primary btn-disabled" href="#" download="nanoproprompt_art.jpg">Download Image 📥</a>
+                <button class="btn btn-secondary" onclick="document.getElementById('studio-prompt').focus()">Refine This Image</button>
+            </div>
+        </div>
+
+        <!-- === 5. MONETAG FOOTER === -->
+        <footer class="monetag-footer">
+            <div class="monetag-text">🎁 Extra AI tools, assets & deals for creators</div>
+            <a href="https://otieu.com/4/10294665" target="_blank" class="monetag-btn">Unlock Free Resources</a>
+        </footer>
+    </main>
+
+    <script>
+        // === TELEGRAM INIT ===
+        if (window.Telegram && window.Telegram.WebApp) {
+            window.Telegram.WebApp.ready();
+            window.Telegram.WebApp.expand(); // Expand to full height
+            // Set header color to match app
+            window.Telegram.WebApp.setHeaderColor('#050505'); 
+        }
+
+        // === TAB LOGIC ===
+        function switchTab(tabId) {
+            // Update Headers
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            // Update Content
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+            if (tabId === 'vinci') {
+                document.querySelector('.tab-btn:nth-child(1)').classList.add('active');
+                document.getElementById('tab-vinci').classList.add('active');
+            } else {
+                document.querySelector('.tab-btn:nth-child(2)').classList.add('active');
+                document.getElementById('tab-studio').classList.add('active');
+            }
+        }
+
+        // === VINCI LOGIC (MOCK) ===
+        function challengeVinci() {
+            const input = document.getElementById('vinci-idea').value.trim();
+            const style = document.getElementById('vinci-style').value;
+            const resultsDiv = document.getElementById('vinci-results');
+
+            if (!input) {
+                alert("Please enter an idea first!");
+                return;
+            }
+
+            // 1. Mock Score
+            const score = Math.floor(Math.random() * (100 - 65 + 1)) + 65; // Random between 65 and 100
+            
+            // 2. Feedback based on score
+            let feedback = "";
+            if (score > 90) feedback = "Excellent! This concept is crystal clear and highly stylized.";
+            else if (score > 80) feedback = "Great start. Adding a bit more lighting detail could push it further.";
+            else feedback = "Good foundation. I've added some technical keywords to enhance clarity.";
+
+            // 3. Generate Mock Prompts
+            const p1 = `${input}, ${style} style, highly detailed, 8k resolution, cinematic lighting, masterpiece.`;
+            const p2 = `(Best quality), (Masterpiece), ${input}, in the style of ${style}, volumetric fog, ray tracing, sharp focus.`;
+            const p3 = `Award winning photography of ${input}, ${style} aesthetic, depth of field, HDR, intricate details, trending on ArtStation.`;
+
+            // 4. Update UI
+            resultsDiv.style.display = "block";
+            
+            // Animate Progress Bar
+            document.getElementById('score-value').innerText = score + "/100";
+            const bar = document.getElementById('score-bar');
+            bar.style.width = "0%";
+            setTimeout(() => { bar.style.width = score + "%"; }, 100);
+
+            document.getElementById('vinci-feedback').innerText = feedback;
+            document.getElementById('prompt-1').innerText = p1;
+            document.getElementById('prompt-2').innerText = p2;
+            document.getElementById('prompt-3').innerText = p3;
+
+            // Scroll to results
+            resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function resetVinci() {
+            document.getElementById('vinci-idea').value = "";
+            document.getElementById('vinci-results').style.display = "none";
+            document.getElementById('vinci-idea').focus();
+        }
+
+        // Copy Function
+        function copyText(elementId) {
+            const text = document.getElementById(elementId).innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                // Visual feedback
+                const el = document.getElementById(elementId).parentElement;
+                const originalBorder = el.style.borderColor;
+                el.style.borderColor = "#00ff9d"; // Green flash
+                setTimeout(() => {
+                    el.style.borderColor = ""; 
+                }, 300);
+            });
+        }
+
+        // === STUDIO LOGIC (MOCK) ===
+        function generateImage() {
+            const prompt = document.getElementById('studio-prompt').value.trim();
+            if (!prompt) {
+                alert("Please describe the image you want to generate.");
+                return;
+            }
+
+            const btn = document.querySelector('#tab-studio .btn-primary');
+            const previewContainer = document.getElementById('img-preview-box');
+            const imgEl = document.getElementById('generated-image');
+            const downloadBtn = document.getElementById('download-btn');
+            
+            // Loading State
+            btn.innerText = "Generating...";
+            btn.classList.add('btn-disabled');
+            previewContainer.classList.remove('loaded');
+
+            // Mock Dimensions based on selection
+            const ratio = document.getElementById('studio-ratio').value;
+            let width = 600;
+            let height = 600;
+
+            if (ratio === "16:9") { width = 800; height = 450; }
+            if (ratio === "9:16") { width = 450; height = 800; }
+
+            // Random seed for variety
+            const randomSeed = Math.floor(Math.random() * 1000);
+            const imageUrl = `https://picsum.photos/seed/${randomSeed}/${width}/${height}`;
+
+            // Simulate Network Delay
+            setTimeout(() => {
+                imgEl.src = imageUrl;
+                
+                imgEl.onload = () => {
+                    previewContainer.classList.add('loaded');
+                    btn.innerText = "Generate Image 🎨";
+                    btn.classList.remove('btn-disabled');
+                    
+                    // Enable Download
+                    downloadBtn.href = imageUrl;
+                    downloadBtn.classList.remove('btn-disabled');
+                };
+            }, 1500);
+        }
+    </script>
+</body>
+</html>

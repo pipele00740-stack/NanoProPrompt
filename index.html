@@ -90,7 +90,6 @@
             color: var(--neon-blue);
         }
 
-        /* Active indicator line */
         .tab-btn::after {
             content: '';
             position: absolute;
@@ -116,7 +115,7 @@
         }
 
         .tab-content {
-            display: none; /* Hidden by default */
+            display: none;
             animation: fadeIn 0.4s ease;
         }
 
@@ -167,7 +166,6 @@
             min-height: 80px;
         }
 
-        /* Custom Dropdown Arrow */
         select {
             appearance: none;
             background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2300f3ff%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
@@ -176,7 +174,6 @@
             background-size: 12px auto;
         }
 
-        /* Buttons */
         .btn {
             display: inline-block;
             width: 100%;
@@ -227,7 +224,7 @@
             background: var(--card-bg);
             border: 1px solid #333;
             border-radius: var(--border-radius);
-            display: none; /* Hidden until generation */
+            display: none;
         }
 
         .score-container {
@@ -285,7 +282,7 @@
         .prompt-text {
             font-size: 0.9rem;
             color: #fff;
-            padding-right: 30px; /* Space for icon */
+            padding-right: 30px;
         }
 
         .copy-icon {
@@ -296,7 +293,6 @@
             color: var(--text-muted);
         }
 
-        /* === 7. MONETAG FOOTER === */
         .monetag-footer {
             margin-top: 40px;
             padding: 20px 0;
@@ -327,13 +323,11 @@
             background: #222;
         }
 
-        /* Utility classes */
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-    <!-- Header -->
     <header>
         <div class="app-title">NanoProPrompt</div>
         <div class="tabs">
@@ -343,7 +337,6 @@
     </header>
 
     <main>
-        <!-- === TAB 1: PROMPT DIRECTOR (VINCI) === -->
         <div id="tab-vinci" class="tab-content active">
             <div class="form-group">
                 <label for="vinci-idea">Your Core Idea</label>
@@ -364,7 +357,6 @@
 
             <button class="btn btn-primary" onclick="challengeVinci()">Challenge Vinci ⚡</button>
 
-            <!-- Results Area -->
             <div id="vinci-results">
                 <div class="score-container">
                     <div class="score-header">
@@ -399,7 +391,6 @@
             </div>
         </div>
 
-        <!-- === MONETAG FOOTER === -->
         <footer class="monetag-footer">
             <div class="monetag-text">🎁 Extra AI tools, assets & deals for creators</div>
             <a href="https://otieu.com/4/10294665" target="_blank" class="monetag-btn">Unlock Free Resources</a>
@@ -407,14 +398,12 @@
     </main>
 
     <script>
-        // === TELEGRAM INIT ===
         if (window.Telegram && window.Telegram.WebApp) {
             window.Telegram.WebApp.ready();
-            window.Telegram.WebApp.expand(); // Expand to full height
+            window.Telegram.WebApp.expand();
             window.Telegram.WebApp.setHeaderColor('#050505'); 
         }
 
-        // === TAB LOGIC (only Vinci tab visible, Opal is external) ===
         function switchTab(tabId) {
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
@@ -425,23 +414,12 @@
             }
         }
 
-        // === OPEN OPAL (use idea as prompt) ===
         function openOpal() {
-            const idea = document.getElementById('vinci-idea').value.trim();
-            const encoded = encodeURIComponent(idea);
-
-            // BDEL had URL b li dyal Opal:
-            // - ila web: https://app.opal.com/... 
-            // - ila deep link: opal://...
-            const url = `https://opal.example.com/?prompt=${encoded}`;
-
-            // Ila katkhddem f browser:
-            window.open(url, '_blank');
-            // Ila katkhddem dakhel in-app browser momkin t3awedha b:
-            // window.location.href = url;
+            // URL li 3titi, direct:
+            const url = "https://opal.google/?flow=drive:/17eOZ6wcrSTN3fQaUVevVEfL6K0PSxzaw&mode=app";
+            window.open(url, "_blank");
         }
 
-        // === VINCI LOGIC ===
         function challengeVinci() {
             const input = document.getElementById('vinci-idea').value.trim();
             const style = document.getElementById('vinci-style').value;
@@ -452,16 +430,12 @@
                 return;
             }
 
-            // 1. Mock Score
             const score = Math.floor(Math.random() * (100 - 65 + 1)) + 65;
-            
-            // 2. Feedback based on score
             let feedback = "";
             if (score > 90) feedback = "Excellent! This concept is crystal clear and highly stylized.";
             else if (score > 80) feedback = "Great start. Adding a bit more lighting detail could push it further.";
             else feedback = "Good foundation. I've added some technical keywords to enhance clarity.";
 
-            // 3. Generate Prompts (hyper-detailed)
             const base = `${input}, ultra detailed, hyper realistic, cinematic composition, complex textures, rich color grading, intricate details, global illumination, sharp focus, 8k resolution`;
             const lighting = `dramatic lighting, volumetric fog, soft global shadows, realistic reflections`;
             const camera = `photographed with a full-frame DSLR, 85mm lens, f/1.4, shallow depth of field, HDR`;
@@ -471,7 +445,6 @@
             const p2 = `Masterpiece, best quality, ${base}, ${camera}, ${art}.`;
             const p3 = `Ultra photorealistic ${input}, ${style} aesthetic, ${lighting}, ${camera}, high dynamic range, insanely detailed, professional studio quality.`;
 
-            // 4. Update UI
             resultsDiv.style.display = "block";
             
             document.getElementById('score-value').innerText = score + "/100";
@@ -493,7 +466,6 @@
             document.getElementById('vinci-idea').focus();
         }
 
-        // Copy Function
         function copyText(elementId) {
             const text = document.getElementById(elementId).innerText;
             navigator.clipboard.writeText(text).then(() => {
